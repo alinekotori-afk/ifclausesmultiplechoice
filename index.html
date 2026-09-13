@@ -147,19 +147,7 @@
 </head>
 <body>
 
-    <!-- Arquivos de áudio da Wikimedia Commons (Altamente Seguros e Livres) -->
-    <audio id="bg-drone" loop preload="auto">
-        <source src="https://upload.wikimedia.org/wikipedia/commons/3/30/Wind_howling.ogg" type="audio/ogg">
-    </audio>
-    <audio id="bg-tick" loop preload="auto">
-        <source src="https://upload.wikimedia.org/wikipedia/commons/1/13/Clock_ticking_2.ogg" type="audio/ogg">
-    </audio>
-    <audio id="buzzer-audio" preload="auto">
-        <source src="https://upload.wikimedia.org/wikipedia/commons/e/ec/Alarm_Clock.ogg" type="audio/ogg">
-    </audio>
-
     <div id="game-container">
-        
         <div id="start-screen">
             <h1>30 Seconds to Survive</h1>
             <p style="font-size: 1.2rem; margin-bottom: 40px; color: #dcdde1;">You have exactly 30 seconds to answer each of the 20 advanced If Clauses questions. The clock is ticking...</p>
@@ -179,10 +167,10 @@
             <p id="final-message" style="margin-bottom: 30px; font-size: 1.2rem;"></p>
             <button id="restart-btn">Try Again</button>
         </div>
-
     </div>
 
     <script>
+        // Banco de Questões
         const questions = [
             { q: "If you took more exercise, you ____ better.", options: ["would feel", "will feel", "had felt", "felt"], ans: 0 },
             { q: "What would happen if I ____ that red button?", options: ["press", "pressed", "had pressed", "would press"], ans: 1 },
@@ -206,11 +194,14 @@
             { q: "I would be happy to live in the north of Sweden ____ the long nights in winter.", options: ["but for", "if it hadn't been for", "if it weren't", "if it were not for"], ans: 3 }
         ];
 
+        // Variáveis Globais
         let currentQuestionIndex = 0;
         let score = 0;
         let timeLeft = 30.00;
         let timerInterval;
+        let lastTickSecond = 30;
 
+        // Elementos HTML
         const startScreen = document.getElementById('start-screen');
         const quizScreen = document.getElementById('quiz-screen');
         const endScreen = document.getElementById('end-screen');
@@ -220,42 +211,87 @@
         const optionsContainer = document.getElementById('options-container');
         const timerContainer = document.getElementById('timer-container');
         const currentQNum = document.getElementById('current-q-num');
-        
-        const bgDrone = document.getElementById('bg-drone');
-        const bgTick = document.getElementById('bg-tick');
-        const buzzerAudio = document.getElementById('buzzer-audio');
 
-        // Força o carregamento dos áudios na inicialização da página
-        window.addEventListener('DOMContentLoaded', () => {
-            bgDrone.load();
-            bgTick.load();
-            buzzerAudio.load();
-        });
+        // Web Audio API para Som Dinâmico
+        let audioCtx;
+        let droneOsc;
+        let droneGain;
 
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Tensão de Fundo
+        function startDrone() {
+            if (droneOsc) return;
+            droneOsc = audioCtx.createOscillator();
+            droneGain = audioCtx.createGain();
+            droneOsc.type = 'triangle'; // Som grave
+            droneOsc.frequency.setValueAtTime(55, audioCtx.currentTime); 
+            droneGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+            droneGain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 2); // Volume sobe devagar
+            droneOsc.connect(droneGain);
+            droneGain.connect(audioCtx.destination);
+            droneOsc.start();
+        }
+
+        function stopDrone() {
+            if (droneOsc) {
+                droneGain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                droneOsc.stop(audioCtx.currentTime + 0.5);
+                droneOsc = null;
+            }
+        }
+
+        // Tique-Taque
+        function playTick(isUrgent) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(isUrgent ? 900 : 400, audioCtx.currentTime); // Fica mais agudo na urgência
+            gain.gain.setValueAtTime(isUrgent ? 0.05 : 0.02, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        // Alarme Final
+        function playBuzzer() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1);
+        }
+
+        // Lógica do Jogo
         startBtn.addEventListener('click', startGame);
         restartBtn.addEventListener('click', startGame);
 
         function startGame() {
+            initAudio(); // Inicia o motor de áudio no momento do clique (desbloqueia som no Chrome/Safari)
+            startDrone();
+            
             currentQuestionIndex = 0;
             score = 0;
             startScreen.classList.add('hidden');
             endScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
-            
-            // Inicia o áudio
-            bgDrone.volume = 0.5;
-            bgTick.volume = 1.0;
-            bgTick.playbackRate = 1.0;
-            
-            let playPromise1 = bgDrone.play();
-            let playPromise2 = bgTick.play();
-            
-            if (playPromise1 !== undefined) {
-                playPromise1.catch(error => console.log("O áudio foi bloqueado pelo navegador."));
-            }
-            if (playPromise2 !== undefined) {
-                playPromise2.catch(error => console.log("O áudio foi bloqueado pelo navegador."));
-            }
             
             loadQuestion();
         }
@@ -268,6 +304,7 @@
             }
 
             timeLeft = 30.00; 
+            lastTickSecond = 30;
             timerContainer.classList.remove('panic');
             timerContainer.style.color = "var(--timer-color)";
             timerContainer.textContent = timeLeft.toFixed(2);
@@ -295,18 +332,21 @@
                 lastTime = now;
                 timeLeft -= delta;
 
+                // Toca o som do relógio a cada segundo cheio
+                let currentSecond = Math.ceil(timeLeft);
+                if (currentSecond < lastTickSecond && currentSecond > 0) {
+                    playTick(timeLeft <= 10);
+                    lastTickSecond = currentSecond;
+                }
+
                 if (timeLeft <= 10 && timeLeft > 0) {
                     timerContainer.classList.add('panic');
-                    bgTick.playbackRate = 1.3; 
-                } else {
-                    bgTick.playbackRate = 1.0;
                 }
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     timerContainer.textContent = "0.00";
-                    buzzerAudio.currentTime = 0;
-                    buzzerAudio.play().catch(e => console.log(e));
+                    playBuzzer();
                     moveToNextQuestion();
                 } else {
                     timerContainer.textContent = timeLeft.toFixed(2);
@@ -316,8 +356,9 @@
 
         function checkAnswer(selectedIndex) {
             clearInterval(timerInterval);
-            const correctIndex = questions[currentQuestionIndex].ans;
+            playTick(true); // Feedback rápido ao clicar
             
+            const correctIndex = questions[currentQuestionIndex].ans;
             const buttons = optionsContainer.querySelectorAll('button');
             buttons.forEach(btn => btn.disabled = true);
             
@@ -339,12 +380,7 @@
 
         function endGame() {
             clearInterval(timerInterval);
-            
-            bgDrone.pause();
-            bgTick.pause();
-            bgDrone.currentTime = 0;
-            bgTick.currentTime = 0;
-            bgTick.playbackRate = 1.0;
+            stopDrone();
             
             quizScreen.classList.add('hidden');
             endScreen.classList.remove('hidden');
