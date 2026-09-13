@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>If Clauses - Survival Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Roboto:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #f5f6fa;
+            --accent-color: #c23616;
+            --timer-color: #e1b12c;
+            --danger-color: #e84118;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-image: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+        }
+
+        #game-container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(20, 20, 20, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(194, 54, 22, 0.4);
+            border: 2px solid #333;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Creepster', cursive;
+            color: var(--accent-color);
+            font-size: 3.5rem;
+            margin-top: 0;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #timer-container {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--timer-color);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(225, 177, 44, 0.5);
+            transition: color 0.3s ease;
+        }
+
+        .panic {
+            color: var(--danger-color) !important;
+            animation: shake 0.5s infinite;
+            text-shadow: 0 0 15px rgba(232, 65, 24, 0.8) !important;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        #question-text {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .citation {
+            display: block;
+            font-size: 0.75rem;
+            color: #7f8fa6;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media(max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        button {
+            font-family: 'Roboto', sans-serif;
+            background-color: #2f3640;
+            color: #f5f6fa;
+            border: 2px solid #718093;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+            border-color: #fff;
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+
+        #start-btn, #restart-btn {
+            background-color: var(--accent-color);
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            border: none;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        #start-btn:hover, #restart-btn:hover {
+            background-color: #e84118;
+            box-shadow: 0 0 20px #e84118;
+        }
+
+        #score-display {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #44bd32;
+        }
+
+        .progress {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: #7f8fa6;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-audio" loop preload="auto">
+        <source src="https://actions.google.com/sounds/v1/foley/ticking_clock.ogg" type="audio/ogg">
+    </audio>
+    <audio id="buzzer-audio" preload="auto">
+        <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" type="audio/ogg">
+    </audio>
+
+    <div id="game-container">
+        
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <h1>60 Seconds to Survive</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 40px; color: #dcdde1;">You have exactly 60 seconds to answer each of the 20 advanced If Clauses questions. The clock is ticking...</p>
+            <button id="start-btn">Start the Nightmare</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div class="progress">Question <span id="current-q-num">1</span> of 20</div>
+            <div id="timer-container">60.00</div>
+            <div id="question-text">Question goes here...</div>
+            <div class="options-grid" id="options-container">
+                <!-- Options injected via JS -->
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="hidden">
+            <h1>Time's Up!</h1>
+            <div id="score-display">You survived: 0 / 20</div>
+            <p id="final-message" style="margin-bottom: 30px; font-size: 1.2rem;"></p>
+            <button id="restart-btn">Try Again</button>
+        </div>
+
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "If you took more exercise, you ____ better.",
+                citation: "",
+                options: ["would feel", "will feel", "had felt", "felt"],
+                ans: 0
+            },
+            {
+                q: "What would happen if I ____ that red button?",
+                citation: "",
+                options: ["press", "pressed", "had pressed", "would press"],
+                ans: 1
+            },
+            {
+                q: "Would Tim mind if I ____ his bicycle without asking him?",
+                citation: "",
+                options: ["borrow", "would borrow", "borrowed", "had borrowed"],
+                ans: 2
+            },
+            {
+                q: "If I ____ his number, I would phone him.",
+                citation: "",
+                options: ["know", "knew", "had known", "would know"],
+                ans: 1
+            },
+            {
+                q: "I ____ that coat if I were you.",
+                citation: "",
+                options: ["won't buy", "wouldn't have bought", "didn't buy", "wouldn't buy"],
+                ans: 3
+            },
+            {
+                q: "We would need a car if we ____ in the country.",
+                citation: "",
+                options: ["lived", "live", "had lived", "would live"],
+                ans: 0
+            },
+            {
+                q: "I didn't know you were in hospital. If I'd known, I ____ to visit you.",
+                citation: "",
+                options: ["would go", "went", "would have gone", "had gone"],
+                ans: 2
+            },
+            {
+                q: "Ken got to the station in time to catch his train. If he ____ it, he would have been late for his interview.",
+                citation: "",
+                options: ["missed", "had missed", "would miss", "misses"],
+                ans: 1
+            },
+            {
+                q: "I took a taxi to the hotel but the traffic was very bad. It ____ quicker if I had walked.",
+                citation: "",
+                options: ["would be", "had been", "will be", "would have been"],
+                ans: 3
+            },
+            {
+                q: "They helped me a lot. I don't know what I ____ without their help.",
+                citation: "",
+                options: ["did", "would do", "would have done", "had done"],
+                ans: 2
+            },
+            {
+                q: "It's raining. You want to go out, but not in the rain. You say: I wish it ____ raining.",
+                citation: "",
+                options: ["stopped", "would stop", "had stopped", "stops"],
+                ans: 1
+            },
+            {
+                q: "If you ____ home before I get there, I'll meet you at the airport.",
+                citation: "",
+                options: ["leave", "left", "had left", "will leave"],
+                ans: 0
+            },
+            {
+                q: "If the taxi ____ by 10 o'clock, I'll give you a lift to the station.",
+                citation: "",
+                options: ["didn't arrive", "won't arrive", "doesn't arrive", "hasn't arrived"],
+                ans: 2
+            },
+            {
+                q: "I'd sell the house immediately if it ____ to me.",
+                citation: "",
+                options: ["belongs", "belonged", "had belonged", "has belonged"],
+                ans: 1
+            },
+            {
+                q: "____ the symptoms remain 72 hours after starting the course of medicine, consult your doctor again.",
+                citation: "",
+                options: ["If", "Should", "Had", "Were"],
+                ans: 1
+            },
+            {
+                q: "____ you not been absent from school on Friday, you would know what you have to do for homework.",
+                citation: "",
+                options: ["If", "Should", "Had", "Were"],
+                ans: 2
+            },
+            {
+                q: "____ they still living in Brussels, Clare would have been able to stay with her friends.",
+                citation: "",
+                options: ["Should", "Had", "If", "Were"],
+                ans: 3
+            },
+            {
+                q: "If I ____ Georgia when I'm in Rome, I'll send her your regards.",
+                citation: "",
+                options: ["happen to see", "happened to see", "would see", "had seen"],
+                ans: 0
+            },
+            {
+                q: "____ to be found guilty of libel, the newspaper would face huge legal costs.",
+                citation: "",
+                options: ["If it was", "Had it", "Were it", "Should it"],
+                ans: 2
+            },
+            {
+                q: "I would be happy to live in the north of Sweden ____ the long nights in winter.",
+                citation: "",
+                options: ["but for", "if it hadn't been for", "if it weren't", "if it were not for"],
+                ans: 3
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeLeft = 60.00;
+        let timerInterval;
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const endScreen = document.getElementById('end-screen');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const timerContainer = document.getElementById('timer-container');
+        const currentQNum = document.getElementById('current-q-num');
+        const bgAudio = document.getElementById('bg-audio');
+        const buzzerAudio = document.getElementById('buzzer-audio');
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            bgAudio.volume = 0.5;
+            bgAudio.play().catch(e => console.log("Audio autoplay restricted."));
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            if (currentQuestionIndex >= questions.length) {
+                endGame();
+                return;
+            }
+
+            timeLeft = 60.00;
+            timerContainer.classList.remove('panic');
+            timerContainer.style.color = "var(--timer-color)";
+            timerContainer.textContent = timeLeft.toFixed(2);
+            
+            const q = questions[currentQuestionIndex];
+            currentQNum.textContent = currentQuestionIndex + 1;
+            questionText.innerHTML = `${q.q} <span class="citation">${q.citation}</span>`;
+            
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.textContent = opt;
+                btn.addEventListener('click', () => checkAnswer(index));
+                optionsContainer.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            let lastTime = Date.now();
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const delta = (now - lastTime) / 1000;
+                lastTime = now;
+                timeLeft -= delta;
+
+                if (timeLeft <= 10) {
+                    timerContainer.classList.add('panic');
+                    bgAudio.playbackRate = 1.5; 
+                } else {
+                    bgAudio.playbackRate = 1.0;
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerContainer.textContent = "0.00";
+                    buzzerAudio.play();
+                    moveToNextQuestion();
+                } else {
+                    timerContainer.textContent = timeLeft.toFixed(2);
+                }
+            }, 50);
+        }
+
+        function checkAnswer(selectedIndex) {
+            clearInterval(timerInterval);
+            const correctIndex = questions[currentQuestionIndex].ans;
+            
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (selectedIndex === correctIndex) {
+                buttons[selectedIndex].style.backgroundColor = "#44bd32";
+                score++;
+            } else {
+                buttons[selectedIndex].style.backgroundColor = "var(--danger-color)";
+                buttons[correctIndex].style.backgroundColor = "#44bd32";
+            }
+
+            setTimeout(moveToNextQuestion, 1000);
+        }
+
+        function moveToNextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            bgAudio.pause();
+            bgAudio.currentTime = 0;
+            bgAudio.playbackRate = 1.0;
+            quizScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            document.getElementById('score-display').textContent = `You survived: ${score} / ${questions.length}`;
+            
+            const finalMsg = document.getElementById('final-message');
+            if (score === 20) {
+                finalMsg.textContent = "Flawless victory! You mastered the conditionals.";
+                finalMsg.style.color = "#44bd32";
+            } else if (score >= 15) {
+                finalMsg.textContent = "Great job! You made it out alive.";
+                finalMsg.style.color = "#e1b12c";
+            } else {
+                finalMsg.textContent = "The conditionals got the better of you. Try again if you dare.";
+                finalMsg.style.color = "var(--danger-color)";
+            }
+        }
+    </script>
+</body>
+</html>
