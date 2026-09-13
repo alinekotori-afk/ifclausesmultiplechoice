@@ -54,18 +54,18 @@
         }
 
         #timer-container {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: bold;
             color: var(--timer-color);
             margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(225, 177, 44, 0.5);
+            text-shadow: 0 0 15px rgba(225, 177, 44, 0.5);
             transition: color 0.3s ease;
         }
 
         .panic {
             color: var(--danger-color) !important;
             animation: shake 0.5s infinite;
-            text-shadow: 0 0 15px rgba(232, 65, 24, 0.8) !important;
+            text-shadow: 0 0 20px rgba(232, 65, 24, 0.9) !important;
         }
 
         @keyframes shake {
@@ -155,7 +155,11 @@
 </head>
 <body>
 
-    <audio id="bg-audio" loop preload="auto">
+    <!-- Áudios de Tensão -->
+    <audio id="bg-drone" loop preload="auto">
+        <source src="https://actions.google.com/sounds/v1/ambiences/creepy_background_wind.ogg" type="audio/ogg">
+    </audio>
+    <audio id="bg-tick" loop preload="auto">
         <source src="https://actions.google.com/sounds/v1/foley/ticking_clock.ogg" type="audio/ogg">
     </audio>
     <audio id="buzzer-audio" preload="auto">
@@ -164,24 +168,24 @@
 
     <div id="game-container">
         
-        <!-- Start Screen -->
+        <!-- Tela Inicial -->
         <div id="start-screen">
-            <h1>60 Seconds to Survive</h1>
-            <p style="font-size: 1.2rem; margin-bottom: 40px; color: #dcdde1;">You have exactly 60 seconds to answer each of the 20 advanced If Clauses questions. The clock is ticking...</p>
+            <h1>30 Seconds to Survive</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 40px; color: #dcdde1;">You have exactly 30 seconds to answer each of the 20 advanced If Clauses questions. The clock is ticking...</p>
             <button id="start-btn">Start the Nightmare</button>
         </div>
 
-        <!-- Quiz Screen -->
+        <!-- Tela do Quiz -->
         <div id="quiz-screen" class="hidden">
             <div class="progress">Question <span id="current-q-num">1</span> of 20</div>
-            <div id="timer-container">60.00</div>
+            <div id="timer-container">30.00</div>
             <div id="question-text">Question goes here...</div>
             <div class="options-grid" id="options-container">
-                <!-- Options injected via JS -->
+                <!-- Opções injetadas via JavaScript -->
             </div>
         </div>
 
-        <!-- End Screen -->
+        <!-- Tela Final -->
         <div id="end-screen" class="hidden">
             <h1>Time's Up!</h1>
             <div id="score-display">You survived: 0 / 20</div>
@@ -193,131 +197,31 @@
 
     <script>
         const questions = [
-            {
-                q: "If you took more exercise, you ____ better.",
-                citation: "",
-                options: ["would feel", "will feel", "had felt", "felt"],
-                ans: 0
-            },
-            {
-                q: "What would happen if I ____ that red button?",
-                citation: "",
-                options: ["press", "pressed", "had pressed", "would press"],
-                ans: 1
-            },
-            {
-                q: "Would Tim mind if I ____ his bicycle without asking him?",
-                citation: "",
-                options: ["borrow", "would borrow", "borrowed", "had borrowed"],
-                ans: 2
-            },
-            {
-                q: "If I ____ his number, I would phone him.",
-                citation: "",
-                options: ["know", "knew", "had known", "would know"],
-                ans: 1
-            },
-            {
-                q: "I ____ that coat if I were you.",
-                citation: "",
-                options: ["won't buy", "wouldn't have bought", "didn't buy", "wouldn't buy"],
-                ans: 3
-            },
-            {
-                q: "We would need a car if we ____ in the country.",
-                citation: "",
-                options: ["lived", "live", "had lived", "would live"],
-                ans: 0
-            },
-            {
-                q: "I didn't know you were in hospital. If I'd known, I ____ to visit you.",
-                citation: "",
-                options: ["would go", "went", "would have gone", "had gone"],
-                ans: 2
-            },
-            {
-                q: "Ken got to the station in time to catch his train. If he ____ it, he would have been late for his interview.",
-                citation: "",
-                options: ["missed", "had missed", "would miss", "misses"],
-                ans: 1
-            },
-            {
-                q: "I took a taxi to the hotel but the traffic was very bad. It ____ quicker if I had walked.",
-                citation: "",
-                options: ["would be", "had been", "will be", "would have been"],
-                ans: 3
-            },
-            {
-                q: "They helped me a lot. I don't know what I ____ without their help.",
-                citation: "",
-                options: ["did", "would do", "would have done", "had done"],
-                ans: 2
-            },
-            {
-                q: "It's raining. You want to go out, but not in the rain. You say: I wish it ____ raining.",
-                citation: "",
-                options: ["stopped", "would stop", "had stopped", "stops"],
-                ans: 1
-            },
-            {
-                q: "If you ____ home before I get there, I'll meet you at the airport.",
-                citation: "",
-                options: ["leave", "left", "had left", "will leave"],
-                ans: 0
-            },
-            {
-                q: "If the taxi ____ by 10 o'clock, I'll give you a lift to the station.",
-                citation: "",
-                options: ["didn't arrive", "won't arrive", "doesn't arrive", "hasn't arrived"],
-                ans: 2
-            },
-            {
-                q: "I'd sell the house immediately if it ____ to me.",
-                citation: "",
-                options: ["belongs", "belonged", "had belonged", "has belonged"],
-                ans: 1
-            },
-            {
-                q: "____ the symptoms remain 72 hours after starting the course of medicine, consult your doctor again.",
-                citation: "",
-                options: ["If", "Should", "Had", "Were"],
-                ans: 1
-            },
-            {
-                q: "____ you not been absent from school on Friday, you would know what you have to do for homework.",
-                citation: "",
-                options: ["If", "Should", "Had", "Were"],
-                ans: 2
-            },
-            {
-                q: "____ they still living in Brussels, Clare would have been able to stay with her friends.",
-                citation: "",
-                options: ["Should", "Had", "If", "Were"],
-                ans: 3
-            },
-            {
-                q: "If I ____ Georgia when I'm in Rome, I'll send her your regards.",
-                citation: "",
-                options: ["happen to see", "happened to see", "would see", "had seen"],
-                ans: 0
-            },
-            {
-                q: "____ to be found guilty of libel, the newspaper would face huge legal costs.",
-                citation: "",
-                options: ["If it was", "Had it", "Were it", "Should it"],
-                ans: 2
-            },
-            {
-                q: "I would be happy to live in the north of Sweden ____ the long nights in winter.",
-                citation: "",
-                options: ["but for", "if it hadn't been for", "if it weren't", "if it were not for"],
-                ans: 3
-            }
+            { q: "If you took more exercise, you ____ better.", options: ["would feel", "will feel", "had felt", "felt"], ans: 0 },
+            { q: "What would happen if I ____ that red button?", options: ["press", "pressed", "had pressed", "would press"], ans: 1 },
+            { q: "Would Tim mind if I ____ his bicycle without asking him?", options: ["borrow", "would borrow", "borrowed", "had borrowed"], ans: 2 },
+            { q: "If I ____ his number, I would phone him.", options: ["know", "knew", "had known", "would know"], ans: 1 },
+            { q: "I ____ that coat if I were you.", options: ["won't buy", "wouldn't have bought", "didn't buy", "wouldn't buy"], ans: 3 },
+            { q: "We would need a car if we ____ in the country.", options: ["lived", "live", "had lived", "would live"], ans: 0 },
+            { q: "I didn't know you were in hospital. If I'd known, I ____ to visit you.", options: ["would go", "went", "would have gone", "had gone"], ans: 2 },
+            { q: "Ken got to the station in time to catch his train. If he ____ it, he would have been late for his interview.", options: ["missed", "had missed", "would miss", "misses"], ans: 1 },
+            { q: "I took a taxi to the hotel but the traffic was very bad. It ____ quicker if I had walked.", options: ["would be", "had been", "will be", "would have been"], ans: 3 },
+            { q: "They helped me a lot. I don't know what I ____ without their help.", options: ["did", "would do", "would have done", "had done"], ans: 2 },
+            { q: "It's raining. You want to go out, but not in the rain. You say: I wish it ____ raining.", options: ["stopped", "would stop", "had stopped", "stops"], ans: 1 },
+            { q: "If you ____ home before I get there, I'll meet you at the airport.", options: ["leave", "left", "had left", "will leave"], ans: 0 },
+            { q: "If the taxi ____ by 10 o'clock, I'll give you a lift to the station.", options: ["didn't arrive", "won't arrive", "doesn't arrive", "hasn't arrived"], ans: 2 },
+            { q: "I'd sell the house immediately if it ____ to me.", options: ["belongs", "belonged", "had belonged", "has belonged"], ans: 1 },
+            { q: "____ the symptoms remain 72 hours after starting the course of medicine, consult your doctor again.", options: ["If", "Should", "Had", "Were"], ans: 1 },
+            { q: "____ you not been absent from school on Friday, you would know what you have to do for homework.", options: ["If", "Should", "Had", "Were"], ans: 2 },
+            { q: "____ they still living in Brussels, Clare would have been able to stay with her friends.", options: ["Should", "Had", "If", "Were"], ans: 3 },
+            { q: "If I ____ Georgia when I'm in Rome, I'll send her your regards.", options: ["happen to see", "happened to see", "would see", "had seen"], ans: 0 },
+            { q: "____ to be found guilty of libel, the newspaper would face huge legal costs.", options: ["If it was", "Had it", "Were it", "Should it"], ans: 2 },
+            { q: "I would be happy to live in the north of Sweden ____ the long nights in winter.", options: ["but for", "if it hadn't been for", "if it weren't", "if it were not for"], ans: 3 }
         ];
 
         let currentQuestionIndex = 0;
         let score = 0;
-        let timeLeft = 60.00;
+        let timeLeft = 30.00;
         let timerInterval;
 
         const startScreen = document.getElementById('start-screen');
@@ -329,7 +233,10 @@
         const optionsContainer = document.getElementById('options-container');
         const timerContainer = document.getElementById('timer-container');
         const currentQNum = document.getElementById('current-q-num');
-        const bgAudio = document.getElementById('bg-audio');
+        
+        // Elementos de Áudio
+        const bgDrone = document.getElementById('bg-drone');
+        const bgTick = document.getElementById('bg-tick');
         const buzzerAudio = document.getElementById('buzzer-audio');
 
         startBtn.addEventListener('click', startGame);
@@ -341,8 +248,14 @@
             startScreen.classList.add('hidden');
             endScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
-            bgAudio.volume = 0.5;
-            bgAudio.play().catch(e => console.log("Audio autoplay restricted."));
+            
+            // Inicia o som agonizante desde o primeiro clique
+            bgDrone.volume = 0.6;
+            bgTick.volume = 0.8;
+            bgTick.playbackRate = 1.0;
+            bgDrone.play().catch(e => console.log("Áudio bloqueado."));
+            bgTick.play().catch(e => console.log("Áudio bloqueado."));
+            
             loadQuestion();
         }
 
@@ -353,14 +266,14 @@
                 return;
             }
 
-            timeLeft = 60.00;
+            timeLeft = 30.00; // Define o tempo como 30 segundos
             timerContainer.classList.remove('panic');
             timerContainer.style.color = "var(--timer-color)";
             timerContainer.textContent = timeLeft.toFixed(2);
             
             const q = questions[currentQuestionIndex];
             currentQNum.textContent = currentQuestionIndex + 1;
-            questionText.innerHTML = `${q.q} <span class="citation">${q.citation}</span>`;
+            questionText.innerHTML = q.q;
             
             optionsContainer.innerHTML = '';
             q.options.forEach((opt, index) => {
@@ -381,16 +294,18 @@
                 lastTime = now;
                 timeLeft -= delta;
 
-                if (timeLeft <= 10) {
+                // Começa o desespero quando faltam 10 segundos
+                if (timeLeft <= 10 && timeLeft > 0) {
                     timerContainer.classList.add('panic');
-                    bgAudio.playbackRate = 1.5; 
+                    bgTick.playbackRate = 1.5; // O relógio acelera
                 } else {
-                    bgAudio.playbackRate = 1.0;
+                    bgTick.playbackRate = 1.0;
                 }
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     timerContainer.textContent = "0.00";
+                    buzzerAudio.currentTime = 0;
                     buzzerAudio.play();
                     moveToNextQuestion();
                 } else {
@@ -424,9 +339,14 @@
 
         function endGame() {
             clearInterval(timerInterval);
-            bgAudio.pause();
-            bgAudio.currentTime = 0;
-            bgAudio.playbackRate = 1.0;
+            
+            // Para todos os sons
+            bgDrone.pause();
+            bgTick.pause();
+            bgDrone.currentTime = 0;
+            bgTick.currentTime = 0;
+            bgTick.playbackRate = 1.0;
+            
             quizScreen.classList.add('hidden');
             endScreen.classList.remove('hidden');
             
